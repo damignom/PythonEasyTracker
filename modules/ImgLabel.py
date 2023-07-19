@@ -5,23 +5,36 @@ from PyQt5.QtWidgets import QLabel
 from cv2 import VideoCapture
 
 from conf import settings
+#from modules.Tracker import create_tracker
 
 
 class ImgLabel(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.video_capture = VideoCapture(0)  # Инициализация видеозахвата
+        self.video_capture = VideoCapture("rtsp://admin:Admin123@192.168.0.108:554")  # Инициализация видеозахвата
         self.tracking_enabled = False  #лаг для отслеживания области
         self.tracker = None  # Трекер OpenCV
         self.selection_start = QPoint()  # Начальная точка выбора области
         self.selection_end = QPoint()  # Конечная точка выбора области
 
-    def start_tracking(self):
+        self.bbox = 0
+
+
+    def start_tracking(self, name, frame):
+        # чтение трекера из cmbTrackers
+
+        # создание трекера
+        #self.tracker = create_tracker(name)
+
+        print(self.tracker)
+        # иницилизация трекера
+        #self.tracker.init(frame, self.bbox)
+
         self.tracking_enabled = True
-        self.tracker = cv2.TrackerKCF_create()  # Используйте нужный трекер OpenCV
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
+            self.drawing = True
             self.selection_start = event.pos()
 
     def mouseMoveEvent(self, event):
@@ -32,30 +45,38 @@ class ImgLabel(QLabel):
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.selection_end = event.pos()
-            self.tracking_enabled = True
-            self.tracker = cv2.TrackerKCF_create()  # Используйте нужный трекер OpenCV
             self.update()
 
     def paintEvent(self, event):
+
         super().paintEvent(event)
         painter = QPainter(self)
-        painter.setPen(QPen(Qt.blue, 2, Qt.SolidLine))
-        print(Qt.red)
+        pen = QPen(QColor(*settings.TRACKER_BORDER_COLOR), 2, Qt.SolidLine)
+        painter.setPen(QPen(pen))
+        #print(settings.TRACKER_BORDER_COLOR)
         painter.drawRect(self.selection_start.x(), self.selection_start.y(),
                          self.selection_end.x() - self.selection_start.x(),
                          self.selection_end.y() - self.selection_start.y())
+        self.bbox = (self.selection_start.x(), self.selection_start.y(), self.selection_end.x() - self.selection_start.x(), self.selection_end.y() - self.selection_start.y())
+        #print(self.bbox)
 
-    def update_frame(self):
-        ret, frame = self.video_capture.read()
+    def update_frame(self, keyboard=None):
+        ret, self.frame = self.video_capture.read()
         if ret:
+            self.frame = cv2.resize(self.frame, (self.size().width(), self.size().height()), cv2.INTER_LINEAR)
+
             if self.tracking_enabled:
-                success, bbox = self.tracker.update(frame)
+                success, bbox = self.tracker.update(self.frame)
                 if success:
                     x, y, w, h = [int(coord) for coord in bbox]
-                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    cv2.rectangle(self.frame, (x, y), (x + w, y + h), settings.TRACKER_BORDER_COLOR, 2)
+
+            rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
             h, w, ch = rgb_image.shape
             bytes_per_line = ch * w
             q_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
             pixmap = QPixmap.fromImage(q_image)
             self.setPixmap(pixmap.scaled(self.width(), self.height(), Qt.KeepAspectRatio))
+
+
+

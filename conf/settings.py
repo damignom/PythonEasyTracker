@@ -9,6 +9,7 @@ TRACKERS_SOURCE_LIST = (
     'BOOSTING',
     'MEDIANFLOW',
     'MOSSE',
+    'TLD',
 )
 
 TRACKER_BORDER_COLOR = (255, 0, 0)
