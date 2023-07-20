@@ -8,6 +8,7 @@ from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QPaintEvent, QBrush
 from PyQt5.QtWidgets import QApplication, QColorDialog, QMainWindow, QVBoxLayout
 from PyQt5.uic import loadUi
 import conf.settings as settings
+from modules.FpsMonitor import FpsMonitor
 from modules.ImgLabel import ImgLabel
 from modules.Tracker import Tracker
 
@@ -40,6 +41,12 @@ class MainWindow(QMainWindow):
         self.timer.timeout.connect(self.imgLabel.update_frame)
         self.timer.start(30)
 
+        self.timerInfo = QTimer(self)
+        self.timerInfo.timeout.connect(self.update_information)
+        self.timerInfo.start(30)
+
+        #self.fpsMonitor = FpsMonitor()
+
 
     def show_color_picker(self):
         color = QColorDialog.getColor()
@@ -58,6 +65,12 @@ class MainWindow(QMainWindow):
             self.imgLabel.tracker.create_tracker(self.imgLabel.frame, self.imgLabel.bbox)
         elif self.imgLabel.bbox == 0:
             self.listWidget.addItem("Select area")
+
+    def update_information(self):
+        self.lblFps.setText(str(self.imgLabel.FpsMonitor.getFps()))
+
+
+
 
 
 

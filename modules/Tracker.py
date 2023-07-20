@@ -5,6 +5,7 @@ class Tracker:
     def __init__(self, tracker_type='BOOSTING'):
         self.tracker_type = tracker_type
         self.tracker = None
+        self.fps = None
 
     def create_tracker(self, frame, bbox):
         if self.tracker_type == 'BOOSTING':

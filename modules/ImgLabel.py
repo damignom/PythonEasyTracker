@@ -1,3 +1,5 @@
+import time
+
 import cv2
 from PyQt5.QtCore import QPoint, Qt
 from PyQt5.QtGui import QPainter, QPen, QImage, QPixmap, QColor
@@ -6,12 +8,13 @@ from cv2 import VideoCapture
 
 from conf import settings
 #from modules.Tracker import create_tracker
+from modules.FpsMonitor import FpsMonitor
 
 
 class ImgLabel(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.video_capture = VideoCapture("rtsp://admin:Admin123@192.168.0.108:554")  # Инициализация видеозахвата
+        self.video_capture = VideoCapture(settings.CAM_SOURCE_LIST[1])  # Инициализация видеозахвата
         self.tracking_enabled = False  #лаг для отслеживания области
         self.tracker = None  # Трекер OpenCV
         self.selection_start = QPoint()  # Начальная точка выбора области
@@ -19,6 +22,7 @@ class ImgLabel(QLabel):
 
         self.bbox = 0
 
+        self.FpsMonitor = FpsMonitor()
 
     def start_tracking(self, name, frame):
         # чтение трекера из cmbTrackers
@@ -70,6 +74,15 @@ class ImgLabel(QLabel):
                 if success:
                     x, y, w, h = [int(coord) for coord in bbox]
                     cv2.rectangle(self.frame, (x, y), (x + w, y + h), settings.TRACKER_BORDER_COLOR, 2)
+
+            self.FpsMonitor.update()
+            fps = self.FpsMonitor.getFps()
+
+            #fps_current_time = time.time() - self.fps_start_time
+            #fps = self.fps_frame_count / fps_current_time
+
+            # Display FPS on the frame
+            cv2.putText(self.frame, f": {round(fps, 2)}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
             rgb_image = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
             h, w, ch = rgb_image.shape

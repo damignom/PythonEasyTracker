@@ -13,3 +13,9 @@ TRACKERS_SOURCE_LIST = (
 )
 
 TRACKER_BORDER_COLOR = (255, 0, 0)
+
+CAM_SOURCE_LIST = (
+    'rtsp://admin:Admin123@192.168.0.108:554',
+    0,
+)
+
