@@ -9,6 +9,7 @@ from cv2 import VideoCapture
 from conf import settings
 #from modules.Tracker import create_tracker
 from modules.FpsMonitor import FpsMonitor
+from modules.Tracker import Tracker
 
 
 class ImgLabel(QLabel):
@@ -16,13 +17,15 @@ class ImgLabel(QLabel):
         super().__init__(parent)
         self.video_capture = VideoCapture(settings.CAM_SOURCE_LIST[1])  # Инициализация видеозахвата
         self.tracking_enabled = False  #лаг для отслеживания области
-        self.tracker = None  # Трекер OpenCV
+        self.tracker = Tracker()  # Трекер OpenCV
         self.selection_start = QPoint()  # Начальная точка выбора области
         self.selection_end = QPoint()  # Конечная точка выбора области
 
         self.bbox = 0
 
         self.FpsMonitor = FpsMonitor()
+
+        self.trackingOk = None
 
     def start_tracking(self, name, frame):
         # чтение трекера из cmbTrackers
@@ -72,8 +75,12 @@ class ImgLabel(QLabel):
             if self.tracking_enabled:
                 success, bbox = self.tracker.update(self.frame)
                 if success:
+                    self.trackingOk = True
                     x, y, w, h = [int(coord) for coord in bbox]
                     cv2.rectangle(self.frame, (x, y), (x + w, y + h), settings.TRACKER_BORDER_COLOR, 2)
+                else:
+                    self.trackingOk = False
+
 
             self.FpsMonitor.update()
             fps = self.FpsMonitor.getFps()

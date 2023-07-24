@@ -45,7 +45,6 @@ class MainWindow(QMainWindow):
         self.timerInfo.timeout.connect(self.update_information)
         self.timerInfo.start(30)
 
-        #self.fpsMonitor = FpsMonitor()
 
 
     def show_color_picker(self):
@@ -68,6 +67,7 @@ class MainWindow(QMainWindow):
 
     def update_information(self):
         self.lblFps.setText(str(self.imgLabel.FpsMonitor.getFps()))
+        self.lblTracking.setText(self.imgLabel.tracker.getTrackingState())
 
 
 
